@@ -17,3 +17,5 @@ class TestingMatrix(MatrixBase):
 
 if __name__ == "__main__":
     test = TestingMatrix()
+    if (not test.process()):
+        test.print_help()

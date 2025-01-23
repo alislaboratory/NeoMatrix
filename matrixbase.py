@@ -69,7 +69,7 @@ class MatrixBase(object):
           options.drop_privileges=False
 
         self.matrix = RGBMatrix(options = options)
-
+        print("Yo I'm here and I'm running")
         try:
             # Start loop
             print("CTRL-C to stop")
