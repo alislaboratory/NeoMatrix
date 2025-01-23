@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game of Life</title>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #282c34;
+            color: white;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(32, 10px);
+            grid-gap: 1px;
+            justify-content: center;
+            margin: 20px auto;
+        }
+        .cell {
+            width: 10px;
+            height: 10px;
+            background-color: black;
+        }
+        .cell.alive {
+            background-color: white;
+        }
+        button {
+            margin: 10px;
+            padding: 10px 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Game of Life</h1>
+    <div id="grid" class="grid"></div>
+    <button onclick="startGame()">Start</button>
+    <button onclick="stopGame()">Stop</button>
+    <button onclick="randomizeGrid()">Randomize</button>
+    <button onclick="clearGrid()">Clear</button>
+    <input type="range" min="10" max="1000" value="100" id="speedSlider" onchange="setSpeed()">
+    <label for="speedSlider">Speed</label>
+
+    <script>
+        const socket = io();
+        const gridElement = document.getElementById("grid");
+
+        // Create grid cells
+        function createGrid(rows, cols) {
+            gridElement.innerHTML = "";
+            for (let i = 0; i < rows; i++) {
+                for (let j = 0; j < cols; j++) {
+                    const cell = document.createElement("div");
+                    cell.classList.add("cell");
+                    gridElement.appendChild(cell);
+                }
+            }
+        }
+        createGrid(16, 32);
+
+        // Update grid
+        socket.on("update_grid", (data) => {
+            const cells = document.querySelectorAll(".cell");
+            const grid = data.grid;
+            grid.flat().forEach((cell, index) => {
+                cells[index].classList.toggle("alive", cell === 1);
+            });
+        });
+
+        // Controls
+        function startGame() {
+            console.log("Start button clicked.")
+            socket.emit("start");
+        }
+        function stopGame() {
+            socket.emit("stop");
+        }
+        function randomizeGrid() {
+            socket.emit("randomize");
+        }
+        function clearGrid() {
+            socket.emit("clear");
+        }
+        function setSpeed() {
+            const speed = document.getElementById("speedSlider").value / 1000;
+            socket.emit("set_speed", { speed });
+        }
+    </script>
+</body>
+</html>
