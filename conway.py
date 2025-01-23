@@ -1,8 +1,9 @@
 ### CONWAY'S GAME OF LIFE FOR NEOMATRIX
 ### ALI ASHRAFY 2025
 
-from matrixbase import MatrixBase
+# from matrixbase import MatrixBase
 from copy import deepcopy
+import random
 
 
 
@@ -27,20 +28,39 @@ class Life:
 
 
     def clear_grid(self):
-        pass
+        x = self.columns
+        y = self.rows
+        grid = []
+        for i in range(y):
+            row = []
+            for j in range(x):
+                row.append(0)
+            grid.append(row)
+
+        self.grid = grid
 
     def set_grid(self, initial="glider-gun"):
+        # NOT DONE
         # Have a variety of pre-set grids that have cool patterns.
         pass          
 
     def randomise_grid(self):
-        # 
-        pass
+        x = self.columns
+        y = self.rows
+        grid = []
+        for i in range(y):
+            row = []
+            for j in range(x):
+                row.append(random.choice([0,1]))
+            grid.append(row)
 
-    def _check_neighbors(current_grid, x, y):
+        self.grid = grid
+
+    def _check_neighbors(self, current_grid, x, y):
         neighbor_count = 0
+        neighbors = []
 
-        if ( (x >= 1 and x <= len(current_grid) - 1) and (y >= 1 and y <= len(current_grid[0]) - 1)):
+        if ( (x >= 1 and x < len(current_grid) - 1) and (y >= 1 and y < len(current_grid[0]) - 1)):
             neighbors = [ current_grid[x - 1][y - 1], current_grid[x][y - 1], current_grid[x + 1][y - 1], current_grid[x + 1][y], current_grid[x + 1][y + 1], current_grid[x][y + 1], current_grid[x - 1][y + 1], current_grid[x - 1][y] ]
 
         for neighbor in neighbors:
