@@ -20,9 +20,8 @@ class NeoMatrix(MatrixBase):
 
     def run_game_loop(self):
         self.offscreen_canvas = self.matrix.CreateFrameCanvas()
-        print("At the top")
+
         while True:
-            print("I mean we're hereee")
             if self.running:
                 print("Game is running")  # Debug statement
                 self.life.grid = self.life.tick()
@@ -105,8 +104,8 @@ def matrix_thread():
 
 if __name__ == "__main__":
     # Run the matrix logic in a separate thread
-    # game_thread = threading.Thread(target=matrix.run_game_loop, daemon=True)
-    # game_thread.start()
+    game_thread = threading.Thread(target=matrix.run_game_loop, daemon=True)
+    game_thread.start()
     
 
     # Run the Flask web server
