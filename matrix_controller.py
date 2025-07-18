@@ -131,58 +131,52 @@ class MatrixController:
                            vs_currency='usd',
                            font_path="fonts/7x13.bdf",
                            color=(255,255,0),
-                           scroll_speed=0.05,
                            update_interval=60):
+        """Display first ticker’s price statically, refreshing in place."""
         def runner():
-            font = graphics.Font()
+            font       = graphics.Font()
             font.LoadFont(font_path)
             text_color = graphics.Color(*color)
 
-            # resolve IDs, warn if unknown
-            ids = []
+            # pick the first valid symbol
+            symbol = None
+            cid    = None
             for sym in tickers:
                 key = sym.upper()
                 if key in COINGECKO_IDS:
-                    ids.append((key, COINGECKO_IDS[key]))
-            if not ids:
-                return  # nothing to do
+                    symbol = key
+                    cid    = COINGECKO_IDS[key]
+                    break
+            if not symbol:
+                return
 
             while not self.stop_event.is_set():
-                # fetch prices
-                params = {
-                    'ids': ','.join(id for _, id in ids),
-                    'vs_currencies': vs_currency
-                }
+                # fetch price
                 try:
-                    resp = requests.get(
+                    data = requests.get(
                         'https://api.coingecko.com/api/v3/simple/price',
-                        params=params, timeout=10
+                        params={'ids': cid, 'vs_currencies': vs_currency},
+                        timeout=10
                     ).json()
+                    price = data.get(cid, {}).get(vs_currency)
                 except Exception:
-                    time.sleep(update_interval)
-                    continue
+                    price = None
 
-                # build list of strings
-                lines = []
-                for sym, cid in ids:
-                    price = resp.get(cid, {}).get(vs_currency)
-                    if price is not None:
-                        lines.append(f"{sym}: ${price:.2f}")
-
-                # scroll each line
-                for text in lines:
-                    pos = self.matrix.width
+                if price is not None:
+                    text = f"{symbol}: ${price:.2f}"
+                    self.matrix.Clear()
+                    # measure text width, then center
                     length = graphics.DrawText(self.matrix, font, 0, 0, text_color, text)
-                    while pos + length > 0 and not self.stop_event.is_set():
-                        self.matrix.Clear()
-                        graphics.DrawText(self.matrix, font, pos, font.height, text_color, text)
-                        pos -= 1
-                        time.sleep(scroll_speed)
+                    x = (self.matrix.width  - length) // 2
+                    y = (self.matrix.height + font.height) // 2
+                    graphics.DrawText(self.matrix, font, x, y, text_color, text)
 
-                # wait before next fetch
+                # wait up to update_interval seconds (or break early if stopped)
                 for _ in range(update_interval):
                     if self.stop_event.is_set():
                         break
                     time.sleep(1)
 
         self._run_in_thread(runner)
+
+
