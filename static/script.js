@@ -61,13 +61,22 @@ document.getElementById('startTicker').addEventListener('click', () => {
                      .map(s => s.trim())
                      .filter(s => s);
   const priceColor = document.getElementById('tickerPriceColor').value;
+  const refresh = parseInt(
+    document.getElementById('tickerRefresh').value, 10
+  ) || 60;
+
   if (symbols.length) {
     fetch('/api/crypto', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ symbols, price_color: priceColor })
+      body: JSON.stringify({
+        symbols,
+        price_color: priceColor,
+        refresh_interval: refresh
+      })
     });
   }
 });
+
 
 });
