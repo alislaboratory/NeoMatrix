@@ -129,16 +129,16 @@ class MatrixController:
 
     def show_crypto_ticker(self, tickers,
                            vs_currency='usd',
-                           font_path="fonts/7x13.bdf",
+                           font_path="fonts/5x7.bdf",
                            color=(255,255,0),
                            update_interval=60):
-        """Display first ticker’s price statically, refreshing in place."""
+        """Display first ticker’s symbol and integer price on two centered lines."""
         def runner():
             font       = graphics.Font()
             font.LoadFont(font_path)
             text_color = graphics.Color(*color)
 
-            # pick the first valid symbol
+            # pick first valid symbol
             symbol = None
             cid    = None
             for sym in tickers:
@@ -163,15 +163,26 @@ class MatrixController:
                     price = None
 
                 if price is not None:
-                    text = f"{symbol}: ${price:.2f}"
-                    self.matrix.Clear()
-                    # measure text width, then center
-                    length = graphics.DrawText(self.matrix, font, 0, 0, text_color, text)
-                    x = (self.matrix.width  - length) // 2
-                    y = (self.matrix.height + font.height) // 2
-                    graphics.DrawText(self.matrix, font, x, y, text_color, text)
+                    # only integer part
+                    price_int = int(price)
+                    line1 = symbol
+                    line2 = str(price_int)
 
-                # wait up to update_interval seconds (or break early if stopped)
+                    self.matrix.Clear()
+
+                    # draw line1
+                    w1 = graphics.DrawText(self.matrix, font, 0, 0, text_color, line1)
+                    x1 = (self.matrix.width  - w1) // 2
+                    y1 = font.height                     # baseline at row 7
+                    graphics.DrawText(self.matrix, font, x1, y1, text_color, line1)
+
+                    # draw line2
+                    w2 = graphics.DrawText(self.matrix, font, 0, 0, text_color, line2)
+                    x2 = (self.matrix.width  - w2) // 2
+                    y2 = self.matrix.height - 1          # baseline at bottom row (15)
+                    graphics.DrawText(self.matrix, font, x2, y2, text_color, line2)
+
+                # wait up to update_interval seconds (break if stopped)
                 for _ in range(update_interval):
                     if self.stop_event.is_set():
                         break
