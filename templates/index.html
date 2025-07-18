@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>LED Matrix Control</title>
+  <style>
+    #grid { display: grid; grid-template-columns: repeat(32, 20px); grid-gap: 1px; }
+    .cell { width: 20px; height: 20px; background: #000; cursor: pointer; }
+    #controls { margin-bottom: 1em; }
+  </style>
+</head>
+<body>
+  <div id="controls">
+    <form id="textForm">
+      <input type="text" id="textInput" placeholder="Text to scroll" />
+      <button type="submit">Show Text</button>
+    </form>
+    <button class="progBtn" data-prog="rotating_square">Rotating Square</button>
+    <button class="progBtn" data-prog="rainbow">Rainbow</button>
+    <button class="progBtn" data-prog="clock">Clock</button>
+    <button id="clearBtn">Clear</button>
+    <input type="color" id="colorPicker" value="#ff0000" />
+  </div>
+  <div id="grid"></div>
+  <script src="/static/script.js"></script>
+</body>
+</html>
