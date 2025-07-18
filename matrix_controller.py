@@ -3,6 +3,17 @@ import threading
 import math
 from datetime import datetime
 from rgbmatrix import RGBMatrix, RGBMatrixOptions, graphics
+import requests
+
+
+COINGECKO_IDS = {
+    'BTC': 'bitcoin',
+    'ETH': 'ethereum',
+    'DOGE': 'dogecoin',
+    'LTC': 'litecoin',
+    'XRP': 'ripple',
+    # add more as you like...
+}
 
 class MatrixController:
     def __init__(self):
@@ -18,7 +29,7 @@ class MatrixController:
         self.worker = None
 
     def _run_in_thread(self, target, *args):
-        if self.worker and self.worker.is_alive():
+        if self.worker and self.worker.is_alive():c
             self.stop_event.set()
             self.worker.join()
         self.stop_event.clear()
@@ -115,3 +126,63 @@ class MatrixController:
             self.stop_event.set()
             self.worker.join()
         self.matrix.SetPixel(x, y, *color)
+
+    def show_crypto_ticker(self, tickers,
+                           vs_currency='usd',
+                           font_path="fonts/7x13.bdf",
+                           color=(255,255,0),
+                           scroll_speed=0.05,
+                           update_interval=60):
+        def runner():
+            font = graphics.Font()
+            font.LoadFont(font_path)
+            text_color = graphics.Color(*color)
+
+            # resolve IDs, warn if unknown
+            ids = []
+            for sym in tickers:
+                key = sym.upper()
+                if key in COINGECKO_IDS:
+                    ids.append((key, COINGECKO_IDS[key]))
+            if not ids:
+                return  # nothing to do
+
+            while not self.stop_event.is_set():
+                # fetch prices
+                params = {
+                    'ids': ','.join(id for _, id in ids),
+                    'vs_currencies': vs_currency
+                }
+                try:
+                    resp = requests.get(
+                        'https://api.coingecko.com/api/v3/simple/price',
+                        params=params, timeout=10
+                    ).json()
+                except Exception:
+                    time.sleep(update_interval)
+                    continue
+
+                # build list of strings
+                lines = []
+                for sym, cid in ids:
+                    price = resp.get(cid, {}).get(vs_currency)
+                    if price is not None:
+                        lines.append(f"{sym}: ${price:.2f}")
+
+                # scroll each line
+                for text in lines:
+                    pos = self.matrix.width
+                    length = graphics.DrawText(self.matrix, font, 0, 0, text_color, text)
+                    while pos + length > 0 and not self.stop_event.is_set():
+                        self.matrix.Clear()
+                        graphics.DrawText(self.matrix, font, pos, font.height, text_color, text)
+                        pos -= 1
+                        time.sleep(scroll_speed)
+
+                # wait before next fetch
+                for _ in range(update_interval):
+                    if self.stop_event.is_set():
+                        break
+                    time.sleep(1)
+
+        self._run_in_thread(runner)

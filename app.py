@@ -33,6 +33,18 @@ def api_pixel():
     mc.set_pixel(x, y, color)
     return jsonify(status='ok')
 
+@app.route('/api/crypto', methods=['POST'])
+def api_crypto():
+    data = request.json or {}
+    symbols = data.get('symbols', [])
+    # ensure list of strings
+    symbols = [s.strip().upper() for s in symbols if isinstance(s, str)]
+    if symbols:
+        mc.show_crypto_ticker(symbols)
+        return jsonify(status='ok')
+    else:
+        return jsonify(status='error', message='No symbols provided'), 400
+
 @app.route('/api/clear', methods=['POST'])
 def api_clear():
     mc.clear()
