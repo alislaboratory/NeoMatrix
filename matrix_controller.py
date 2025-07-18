@@ -29,7 +29,7 @@ class MatrixController:
         self.worker = None
 
     def _run_in_thread(self, target, *args):
-        if self.worker and self.worker.is_alive():c
+        if self.worker and self.worker.is_alive():
             self.stop_event.set()
             self.worker.join()
         self.stop_event.clear()
