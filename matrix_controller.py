@@ -199,6 +199,6 @@ class MatrixController:
                 for _ in range(update_interval):
                     if self.stop_event.is_set():
                         break
-                    time.sleep(0.01)
+                    time.sleep(10)
         
         self._run_in_thread(runner)
