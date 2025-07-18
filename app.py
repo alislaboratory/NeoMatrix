@@ -36,14 +36,15 @@ def api_pixel():
 @app.route('/api/crypto', methods=['POST'])
 def api_crypto():
     data = request.json or {}
-    symbols = data.get('symbols', [])
-    # ensure list of strings
-    symbols = [s.strip().upper() for s in symbols if isinstance(s, str)]
+    symbols = [s.strip() for s in data.get('symbols', []) if isinstance(s, str)]
+    price_hex = data.get('price_color', '#FFFF00')
+    # convert hex #RRGGBB → (r,g,b)
+    price_hex = price_hex.lstrip('#')
+    r, g, b = tuple(int(price_hex[i:i+2], 16) for i in (0, 2, 4))
     if symbols:
-        mc.show_crypto_ticker(symbols)
+        mc.show_crypto_ticker(symbols, price_color=(r, g, b))
         return jsonify(status='ok')
-    else:
-        return jsonify(status='error', message='No symbols provided'), 400
+    return jsonify(status='error', message='No symbols provided'), 400
 
 @app.route('/api/clear', methods=['POST'])
 def api_clear():

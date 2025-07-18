@@ -54,15 +54,20 @@ document.addEventListener('DOMContentLoaded', ()=> {
     document.querySelectorAll('.cell').forEach(c=>c.style.background='#000');
   });
 
-  document.getElementById('startTicker').addEventListener('click', () => {
+  // existing setup…
+document.getElementById('startTicker').addEventListener('click', () => {
   const raw = document.getElementById('cryptoInput').value;
-  const symbols = raw.split(',').map(s => s.trim()).filter(s => s);
+  const symbols = raw.split(',')
+                     .map(s => s.trim())
+                     .filter(s => s);
+  const priceColor = document.getElementById('tickerPriceColor').value;
   if (symbols.length) {
     fetch('/api/crypto', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ symbols })
+      body: JSON.stringify({ symbols, price_color: priceColor })
     });
   }
 });
+
 });

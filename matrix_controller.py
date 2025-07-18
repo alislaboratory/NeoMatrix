@@ -15,6 +15,14 @@ COINGECKO_IDS = {
     # add more as you like...
 }
 
+COIN_COLORS = {
+    'BTC': (247, 147, 26),    # Bitcoin orange (#f7931a)
+    'ETH': (98, 126, 234),    # Ethereum blue (#627eea)
+    'DOGE': (194, 166, 51),   # Dogecoin gold (#c2a633)
+    'LTC': (184, 184, 184),   # Litecoin silver (#b8b8b8)
+    'XRP': (52, 106, 169),    # XRP navy (#346aa9)
+}
+
 class MatrixController:
     def __init__(self):
         options = RGBMatrixOptions()
@@ -128,17 +136,19 @@ class MatrixController:
         self.matrix.SetPixel(x, y, *color)
 
     def show_crypto_ticker(self, tickers,
+                           price_color=(255,255,0),
                            vs_currency='usd',
                            font_path="fonts/5x7.bdf",
-                           color=(255,255,0),
                            update_interval=60):
-        """Display first ticker’s symbol and integer price on two centered lines."""
+        """Display first valid ticker statically:
+           * Line 1: symbol in coin-specific color
+           * Line 2: integer price in user-defined price_color
+        """
         def runner():
             font       = graphics.Font()
             font.LoadFont(font_path)
-            text_color = graphics.Color(*color)
 
-            # pick first valid symbol
+            # pick first valid symbol + ID
             symbol = None
             cid    = None
             for sym in tickers:
@@ -149,6 +159,11 @@ class MatrixController:
                     break
             if not symbol:
                 return
+
+            # coin color from map (fallback to yellow)
+            coin_color = COIN_COLORS.get(symbol, (255,255,0))
+            sym_color  = graphics.Color(*coin_color)
+            price_col  = graphics.Color(*price_color)
 
             while not self.stop_event.is_set():
                 # fetch price
@@ -163,31 +178,27 @@ class MatrixController:
                     price = None
 
                 if price is not None:
-                    # only integer part
                     price_int = int(price)
                     line1 = symbol
                     line2 = str(price_int)
 
                     self.matrix.Clear()
-
-                    # draw line1
-                    w1 = graphics.DrawText(self.matrix, font, 0, 0, text_color, line1)
+                    # draw symbol (line1) at top
+                    w1 = graphics.DrawText(self.matrix, font, 0, 0, sym_color, line1)
                     x1 = (self.matrix.width  - w1) // 2
-                    y1 = font.height                     # baseline at row 7
-                    graphics.DrawText(self.matrix, font, x1, y1, text_color, line1)
+                    y1 = font.height
+                    graphics.DrawText(self.matrix, font, x1, y1, sym_color, line1)
 
-                    # draw line2
-                    w2 = graphics.DrawText(self.matrix, font, 0, 0, text_color, line2)
+                    # draw price (line2) at bottom
+                    w2 = graphics.DrawText(self.matrix, font, 0, 0, price_col, line2)
                     x2 = (self.matrix.width  - w2) // 2
-                    y2 = self.matrix.height - 1          # baseline at bottom row (15)
-                    graphics.DrawText(self.matrix, font, x2, y2, text_color, line2)
+                    y2 = self.matrix.height - 1
+                    graphics.DrawText(self.matrix, font, x2, y2, price_col, line2)
 
-                # wait up to update_interval seconds (break if stopped)
+                # wait up to update_interval seconds
                 for _ in range(update_interval):
                     if self.stop_event.is_set():
                         break
                     time.sleep(1)
-
+        
         self._run_in_thread(runner)
-
-
